@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+    </head>
 
 <body>
 
     <div class="navbar">
         <a href="{{ url_for('list_books') }}" class="nav-link">Livros</a>
         <a href="{{ url_for('add_book') }}" class="nav-link">Cadastrar Livros</a>
+        <a href="{{ url_for('api_docs') }}" class="nav-link">API</a>
     </div>
 
-    <!-- Container: Livros Disponíveis -->
     <div class="booksContainer">
         <h2 class="booksContainerTitle">Livros Disponíveis</h2>
         {% for livro in livros if livro.disponivel %}
@@ -40,7 +40,6 @@
 
     <br>
 
-    <!-- Container: Livros Indisponíveis (Empréstimo) -->
     <div class="booksContainer">
         <h2 class="booksContainerTitle">Livros Indisponíveis</h2>
         {% for livro in livros if not livro.disponivel %}
@@ -64,7 +63,6 @@
         {% endfor %}
     </div>
 
-    <!-- Modal Structure -->
     <div id="bookModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -111,15 +109,20 @@
         }
 
         function openModal(id) {
-            // Fetch book details
-            fetch('/book/' + id)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert('Erro ao carregar livro');
-                        return;
-                    }
+            // CORRIGIDO 2: Usando url_for para gerar a URL base da API /book/
+            // Primeiro gera a URL para um ID placeholder (ex: /book/0), depois substitui o 0.
+            const fetchUrl = '{{ url_for("get_book", id=0) }}'.replace('0', id);
 
+            // Fetch book details
+            fetch(fetchUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        // Tratar 404 ou outros erros HTTP aqui
+                        throw new Error('Livro não encontrado ou erro de servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
                     // Populate data
                     document.getElementById('modalTitle').innerText = data.titulo;
                     document.getElementById('modalAuthor').innerText = data.autor;
@@ -138,12 +141,18 @@
                         noImg.style.display = 'flex';
                     }
 
-                    // Actions
-                    document.getElementById('btnEdit').href = '/edit/' + data.id;
-                    document.getElementById('formDelete').action = '/delete/' + data.id;
+                    // CORRIGIDO 3: Usando url_for para gerar os links de ação
+                    // Gera o template da URL e substitui o placeholder '0' pelo ID real
+                    document.getElementById('btnEdit').href = '{{ url_for("edit_book", id=0) }}'.replace('0', data.id);
+                    document.getElementById('formDelete').action = '{{ url_for("delete_book", id=0) }}'.replace('0', data.id);
 
                     // Show modal
                     modal.style.display = "block";
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar livro:', error);
+                    alert('Erro ao carregar livro. Verifique o console para mais detalhes.');
+                    modal.style.display = "none"; // Garante que o modal feche em caso de erro
                 });
         }
     </script>

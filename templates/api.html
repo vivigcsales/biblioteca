@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da API | Biblioteca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .api-doc-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .endpoint-card {
+            border: 1px solid #ddd;
+            border-left: 5px solid;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .endpoint-card.POST {
+            border-left-color: #28a745; /* Verde para POST/Criação */
+        }
+
+        .endpoint-card.GET {
+            border-left-color: #007bff; /* Azul para GET/Leitura */
+        }
+
+        .endpoint-card.PUT {
+            border-left-color: #ffc107; /* Amarelo para PUT/Atualização */
+        }
+
+        .endpoint-card.DELETE {
+            border-left-color: #dc3545; /* Vermelho para DELETE/Exclusão */
+        }
+
+        .method-tag {
+            display: inline-block;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .method-tag.POST {
+            background-color: #28a745;
+        }
+
+        .method-tag.GET {
+            background-color: #007bff;
+        }
+
+        .method-tag.PUT {
+            background-color: #ffc107;
+        }
+
+        .method-tag.DELETE {
+            background-color: #dc3545;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #333;
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('list_books') }}" class="nav-link">Livros</a>
+        <a href="{{ url_for('add_book') }}" class="nav-link">Cadastrar Livros</a>
+        <a href="api.html" class="nav-link">API</a>
+    </div>
+
+    <div class="api-doc-container">
+        <h1>Documentação da API da Biblioteca</h1>
+        <p>Esta API fornece acesso CRUD aos dados dos livros armazenados no banco de dados SQLite.</p>
+
+
+        <h2>Estrutura do Objeto Livro</h2>
+        <p>Todos os endpoints de criação e atualização esperam ou retornam dados no formato JSON de um livro:</p>
+        <pre><code>{
+    "id": &lt;int&gt;,
+    "titulo": "&lt;string&gt;",
+    "autor": "&lt;string&gt;",
+    "ano_publicacao": &lt;int&gt;,
+    "disponivel": &lt;boolean&gt;
+}</code></pre>
+
+
+        <h2>Endpoints</h2>
+
+        <div class="endpoint-card POST">
+            <span class="method-tag POST">POST</span> <code>/livros</code>
+            <h3>Cadastrar Novo Livro</h3>
+            <p>Cria um novo registro de livro no banco de dados.</p>
+            <ul>
+                <li><strong>Retorno de Sucesso:</strong> <code>201 Created</code> e o objeto do livro com o <code>id</code> gerado.</li>
+                <li><strong>Corpo da Requisição (JSON):</strong> Omitir o campo <code>id</code>.</li>
+                <li><strong>Exemplo de Corpo:</strong>
+                    <pre><code>{
+    "titulo": "As Crônicas de Nárnia",
+    "autor": "C.S. Lewis",
+    "ano_publicacao": 1950,
+    "disponivel": true
+}</code></pre>
+                </li>
+            </ul>
+        </div>
+
+        <div class="endpoint-card GET">
+            <span class="method-tag GET">GET</span> <code>/livros/</code>
+            <h3>Listar Todos os Livros</h3>
+            <p>Retorna uma lista de todos os livros no banco de dados.</p>
+            <ul>
+                <li><strong>Parâmetros:</strong> Nenhum.</li>
+                <li><strong>Retorno de Sucesso:</strong> <code>200 OK</code> e uma lista de objetos Livro (JSON array).</li>
+            </ul>
+        </div>
+
+        <div class="endpoint-card GET">
+            <span class="method-tag GET">GET</span> <code>/livros/{id}</code>
+            <h3>Buscar Livro por ID</h3>
+            <p>Retorna os detalhes de um livro específico.</p>
+            <ul>
+                <li><strong>Parâmetros:</strong> <code>{id}</code> (int) - ID do livro.</li>
+                <li><strong>Retorno de Sucesso:</strong> <code>200 OK</code> e o objeto Livro.</li>
+                <li><strong>Retorno de Erro:</strong> <code>404 Not Found</code> se o ID não existir.</li>
+            </ul>
+        </div>
+
+        <div class="endpoint-card PUT">
+            <span class="method-tag PUT">PUT</span> <code>/livros/{id}</code>
+            <h3>Atualizar Livro Existente</h3>
+            <p>Atualiza todas as informações de um livro com o ID especificado.</p>
+            <ul>
+                <li><strong>Parâmetros:</strong> <code>{id}</code> (int) - ID do livro a ser atualizado.</li>
+                <li><strong>Retorno de Sucesso:</strong> <code>200 OK</code> e o objeto Livro atualizado.</li>
+                <li><strong>Retorno de Erro:</strong> <code>404 Not Found</code> se o ID não existir.</li>
+                <li><strong>Corpo da Requisição (JSON):</strong> Deve incluir todos os campos de LivroBase.</li>
+            </ul>
+        </div>
+
+        <div class="endpoint-card DELETE">
+            <span class="method-tag DELETE">DELETE</span> <code>/livros/{id}</code>
+            <h3>Deletar Livro</h3>
+            <p>Remove um livro do banco de dados pelo seu ID.</p>
+            <ul>
+                <li><strong>Parâmetros:</strong> <code>{id}</code> (int) - ID do livro a ser deletado.</li>
+                <li><strong>Retorno de Sucesso:</strong> <code>200 OK</code> e uma mensagem de sucesso.</li>
+                <li><strong>Retorno de Erro:</strong> <code>404 Not Found</code> se o ID não existir.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
