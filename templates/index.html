@@ -1,89 +1,152 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioteca Universitária - Flask</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .form-container { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        input[type="checkbox"] { margin-right: 5px; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; margin-top: 15px; border-radius: 4px; }
-        button:hover { background-color: #45a049; }
-        .disponivel { color: green; font-weight: bold; }
-        .indisponivel { color: red; }
-    </style>
+    <title>Biblioteca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
-    <h1>📚 Sistema de Cadastro de Livros (Flask)</h1>
-    <p>Rota: <code>/</code> | Método: GET e POST</p>
-    
-    <hr>
-
-    <div class="form-container">
-        <h2>Adicionar Novo Livro</h2>
-        <form method="POST" action="/">
-            <label for="titulo">Título:</label>
-            <input type="text" id="titulo" name="titulo" required>
-
-            <label for="autor">Autor:</label>
-            <input type="text" id="autor" name="autor" required>
-
-            <label for="ano_publicacao">Ano de Publicação:</label>
-            <input type="number" id="ano_publicacao" name="ano_publicacao" required>
-
-            <label>
-                <input type="checkbox" id="disponivel" name="disponivel" checked>
-                Disponível para Empréstimo
-            </label>
-
-            <button type="submit">Cadastrar Livro</button>
-        </form>
+    <div class="navbar">
+        <a href="{{ url_for('list_books') }}" class="nav-link">Livros</a>
+        <a href="{{ url_for('add_book') }}" class="nav-link">Cadastrar Livros</a>
     </div>
 
-    <hr>
+    <!-- Container: Livros Disponíveis -->
+    <div class="booksContainer">
+        <h2 class="booksContainerTitle">Livros Disponíveis</h2>
+        {% for livro in livros if livro.disponivel %}
+        <div class="book" onclick="openModal({{ livro.id }})" style="cursor: pointer;">
+            <div class="bookCover">
+                {% if livro.capa %}
+                <img src="{{ url_for('static', filename='assets/' + livro.capa) }}" alt="Capa de {{ livro.titulo }}">
+                {% else %}
+                <div
+                    style="width:100%; height:100%; background:#ccc; display:flex; align-items:center; justify-content:center; color:#555;">
+                    Sem Capa</div>
+                {% endif %}
+            </div>
+            <h3>{{ livro.titulo }}</h3>
+            <p>{{ livro.autor }}</p>
+            <p>{{ livro.ano_publicacao }}</p>
+        </div>
+        {% else %}
+        <p style="width: 100%; color: #666;">Nenhum livro disponível no momento.</p>
+        {% endfor %}
+    </div>
 
-    <h2>Livros Cadastrados</h2>
-    
-    {% if livros %}
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Título</th>
-                <th>Autor</th>
-                <th>Ano</th>
-                <th>Disponível</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for livro in livros %}
-            <tr>
-                <td>{{ livro['id'] }}</td>
-                <td>{{ livro['titulo'] }}</td>
-                <td>{{ livro['autor'] }}</td>
-                <td>{{ livro['ano_publicacao'] }}</td>
-                <td>
-                    {% if livro['disponivel'] == 1 %}
-                        <span class="disponivel">Sim</span>
-                    {% else %}
-                        <span class="indisponivel">Não</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Nenhum livro cadastrado. Use o formulário acima para adicionar um novo.</p>
-    {% endif %}
+    <br>
 
+    <!-- Container: Livros Indisponíveis (Empréstimo) -->
+    <div class="booksContainer">
+        <h2 class="booksContainerTitle">Livros Indisponíveis</h2>
+        {% for livro in livros if not livro.disponivel %}
+        <div class="book" onclick="openModal({{ livro.id }})"
+            style="filter: grayscale(100%) brightness(0.9) contrast(70%); cursor: pointer;">
+            <div class="bookCover">
+                {% if livro.capa %}
+                <img src="{{ url_for('static', filename='assets/' + livro.capa) }}" alt="Capa de {{ livro.titulo }}">
+                {% else %}
+                <div
+                    style="width:100%; height:100%; background:#ccc; display:flex; align-items:center; justify-content:center; color:#555;">
+                    Sem Capa</div>
+                {% endif %}
+            </div>
+            <h3>{{ livro.titulo }}</h3>
+            <p>{{ livro.autor }}</p>
+            <p>{{ livro.ano_publicacao }}</p>
+        </div>
+        {% else %}
+        <p style="width: 100%; color: #666;">Nenhum livro indisponível.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modalImg" src="" alt="Capa do Livro">
+                    <div id="modalNoImg"
+                        style="display:none; width:100%; height:100%; background:#ccc; align-items:center; justify-content:center; color:#555;">
+                        Sem Capa</div>
+                </div>
+                <div class="modal-details">
+                    <h2 id="modalTitle">Título do Livro</h2>
+                    <p><strong>Autor:</strong> <span id="modalAuthor">Autor</span></p>
+                    <p><strong>Ano:</strong> <span id="modalYear">Ano</span></p>
+                    <p><strong>Status:</strong> <span id="modalStatus">Status</span></p>
+
+                    <div class="modal-actions">
+                        <a id="btnEdit" href="#" class="button">Editar</a>
+                        <form id="formDelete" action="#" method="POST" style="display:inline;"
+                            onsubmit="return confirm('Tem certeza que deseja excluir este livro?');">
+                            <button type="submit" class="button delete-btn">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("bookModal");
+        var span = document.getElementsByClassName("close")[0];
+
+        // Close modal when clicking (x)
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function openModal(id) {
+            // Fetch book details
+            fetch('/book/' + id)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Erro ao carregar livro');
+                        return;
+                    }
+
+                    // Populate data
+                    document.getElementById('modalTitle').innerText = data.titulo;
+                    document.getElementById('modalAuthor').innerText = data.autor;
+                    document.getElementById('modalYear').innerText = data.ano_publicacao;
+                    document.getElementById('modalStatus').innerText = data.disponivel ? 'Disponível' : 'Indisponível';
+
+                    // Image handling
+                    var img = document.getElementById('modalImg');
+                    var noImg = document.getElementById('modalNoImg');
+                    if (data.capa) {
+                        img.src = "{{ url_for('static', filename='assets/') }}" + data.capa;
+                        img.style.display = 'block';
+                        noImg.style.display = 'none';
+                    } else {
+                        img.style.display = 'none';
+                        noImg.style.display = 'flex';
+                    }
+
+                    // Actions
+                    document.getElementById('btnEdit').href = '/edit/' + data.id;
+                    document.getElementById('formDelete').action = '/delete/' + data.id;
+
+                    // Show modal
+                    modal.style.display = "block";
+                });
+        }
+    </script>
 </body>
+
 </html>

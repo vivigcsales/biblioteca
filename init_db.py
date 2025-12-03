@@ -5,13 +5,16 @@ DATABASE_NAME = 'biblioteca.db'
 
 # 2. Instrução SQL para criar a tabela 'livros' 
 #  sintaxe adaptada para SQLite
+DROP_LIVROS_TABLE = "DROP TABLE IF EXISTS livros;"
+
 CREATE_LIVROS_TABLE = """
 CREATE TABLE IF NOT EXISTS livros (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Chave primária, autoincremento 
-    titulo TEXT NOT NULL,                  -- Texto (não pode ser nulo)
-    autor TEXT NOT NULL,                   -- Texto (não pode ser nulo) 
-    ano_publicacao INTEGER,                -- Inteiro 
-    disponivel BOOLEAN                     -- Booleano (em SQLite, tipicamente 0 ou 1) 
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    autor TEXT NOT NULL,
+    ano_publicacao INTEGER,
+    disponivel BOOLEAN,
+    capa TEXT
 );
 """
 
@@ -23,6 +26,7 @@ def init_db():
         conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
 
+        cursor.execute(DROP_LIVROS_TABLE)
         cursor.execute(CREATE_LIVROS_TABLE)
         
         #  Conecta ao banco de dados. Se o arquivo não existir, ele será criado. Executa a instrução para criar a tabela
