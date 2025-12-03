@@ -3,11 +3,10 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional
 
-# INICIALIZAÇÃO CORRIGIDA: Removido o parênteses extra após FastAPI
 app = FastAPI(title="API da Biblioteca", version="1.0.0") 
 DATABASE_NAME = 'biblioteca.db'
 
-# Define a estrutura de dados que a API vai receber/retornar
+#  a estrutura de dados que a API vai receber/retornar
 class LivroBase(BaseModel):
     titulo: str
     autor: str
@@ -23,7 +22,6 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# --- Endpoints da API REST ---
 
 # adiciona novo livro (CREATE)
 @app.post("/livros", status_code=status.HTTP_201_CREATED, response_model=Livro)
@@ -38,9 +36,6 @@ def add_livro(livro: LivroBase): # Pydantic valida a entrada 'livro'
         conn.commit()
         novo_id = cursor.lastrowid
         
-        # CÓDIGO CORRIGIDO: O segundo 'return' foi removido, e o primeiro 'return' ajustado para 
-        # retornar o objeto Livro completo com o novo ID, conforme 'response_model=Livro'.
-        # O retorno abaixo combina os dados do livro recebido (LivroBase) com o ID gerado.
         return {**livro.model_dump(), "id": novo_id}
     
     except Exception as e:
@@ -62,12 +57,10 @@ def list_livros():
 @app.get("/livros/{id}", response_model=Livro)
 def get_livro(id: int):
     conn = get_db_connection()
-    # Usa WHERE para buscar pelo ID
     livro_db = conn.execute('SELECT * FROM livros WHERE id = ?', (id,)).fetchone()
     conn.close()
     
     if livro_db is None:
-        # 404 Not Found se o livro não for encontrado
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Livro não encontrado")
     
     # Retorna o livro como um dicionário
@@ -103,7 +96,6 @@ def delete_livro(id: int):
     cursor.execute("DELETE FROM livros WHERE id = ?", (id,))
     conn.commit()
     
-    # verifica se alguma linha foi afetada, se o id existe
     if cursor.rowcount == 0:
         conn.close()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Livro não encontrado para exclusão")

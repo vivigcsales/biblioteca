@@ -11,7 +11,7 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Ensure upload folder exists
+# se certifica que a pasta da capa existe
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
@@ -24,7 +24,7 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row 
     return conn
 
-# 1. Rota para a lista principal de livros
+# rota para a lista principal de livros
 @app.route('/', methods=['GET'])
 def list_books():
     """Render the list of books (GET only)."""
@@ -33,12 +33,10 @@ def list_books():
     conn.close()
     return render_template('index.html', livros=livros)
 
-# --- NOVA ROTA ADICIONADA PARA O LINK DA API ---
 @app.route('/api_docs', methods=['GET'])
 def api_docs():
     """Renderiza a página de documentação da API."""
     return render_template('api.html')
-# --- FIM DA NOVA ROTA ---
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -51,10 +49,9 @@ def add_book():
             ano_publicacao = int(request.form['ano_publicacao'])
         except ValueError:
             ano_publicacao = None
-        # O valor do checkbox é 1 se estiver marcado, 0 se não estiver presente no form
         disponivel = 1 if 'disponivel' in request.form else 0
         
-        # Handle file upload
+        # upload da capa
         capa_filename = None
         if 'capa' in request.files:
             file = request.files['capa']
@@ -71,7 +68,6 @@ def add_book():
             )
             conn.commit()
         except sqlite3.Error as e:
-            # Em caso de erro, você pode querer logar ou mostrar uma mensagem
             print(f"Erro ao adicionar livro: {e}")
         finally:
             conn.close()
@@ -87,10 +83,9 @@ def get_book(id):
     livro = conn.execute('SELECT * FROM livros WHERE id = ?', (id,)).fetchone()
     conn.close()
     if livro is None:
-        # Usar abort ou HTTPException em Flask para retornar um erro JSON mais limpo
         abort(404, description="Livro não encontrado") 
     
-    return dict(livro) # Retorna o dicionário, que o Flask serializa para JSON
+    return dict(livro) 
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_book(id):
@@ -111,15 +106,13 @@ def edit_book(id):
             ano_publicacao = None
         disponivel = 1 if 'disponivel' in request.form else 0
         
-        # Handle file upload (optional update)
-        capa_filename = livro['capa'] # Keep existing by default
+        # upload da capa
+        capa_filename = livro['capa'] 
         if 'capa' in request.files:
             file = request.files['capa']
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                # Verifica se há um arquivo antigo e tenta deletar (opcional, mas boa prática)
                 if capa_filename and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], capa_filename)):
-                    # Não vamos deletar aqui para simplificar, mas é o local ideal
                     pass
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 capa_filename = filename
@@ -133,7 +126,7 @@ def edit_book(id):
         return redirect(url_for('list_books'))
 
     conn.close()
-    # Se for GET, renderiza o formulário com os dados do livro
+    # se for GET, renderiza o formulário com os dados do livro
     return render_template('edit_book.html', livro=livro)
 
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -145,7 +138,7 @@ def delete_book(id):
     
     if cursor.rowcount == 0:
         conn.close()
-        # Se nenhuma linha foi afetada, o livro não existia
+        # se nenhuma linha foi afetada, o livro não existia
         abort(404, description="Livro não encontrado para exclusão") 
 
     conn.commit()
